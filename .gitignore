@@ -206,7 +206,6 @@ go.work
 *.log.*
 *.sig
 
-pkg/
 src/
 
 ### Windows template
