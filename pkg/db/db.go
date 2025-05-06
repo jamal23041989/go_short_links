@@ -15,8 +15,5 @@ func NewDb(conf *configs.Config) *Db {
 	if err != nil {
 		panic(err)
 	}
-
-	return &Db{
-		db,
-	}
+	return &Db{db}
 }
