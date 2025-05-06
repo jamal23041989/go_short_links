@@ -35,9 +35,7 @@ func (h *LinkHandler) Delete() http.HandlerFunc {
 }
 
 func NewLinkHandler(r *http.ServeMux, deps LinkHandlerDeps) {
-	handler := &LinkHandler{
-		Config: deps.Config,
-	}
+	handler := &LinkHandler{}
 
 	r.HandleFunc("POST /link", handler.Create())
 	r.HandleFunc("GET /{alias}", handler.GoTo())
