@@ -21,9 +21,9 @@ func NewLink(url string) *Link {
 var letterRunes = []rune("qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM")
 
 func RandStringRunes(n int) string {
-	b := make([]rune, n)
+	b := make([]rune, 0, n)
 	for i := 0; i < n; i++ {
-		b = append(b, letterRunes[rand.Intn(len(letterRunes))])
+		b = append(b, letterRunes[rand.Intn(len(letterRunes)-1)])
 	}
 	return string(b)
 }
