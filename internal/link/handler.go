@@ -1,6 +1,7 @@
 package link
 
 import (
+	"github.com/jamal23041989/go_short_links/pkg/middleware"
 	"github.com/jamal23041989/go_short_links/pkg/req"
 	"github.com/jamal23041989/go_short_links/pkg/resp"
 	"gorm.io/gorm"
@@ -112,6 +113,6 @@ func NewLinkHandler(r *http.ServeMux, deps LinkHandlerDeps) {
 
 	r.HandleFunc("POST /link", handler.Create())
 	r.HandleFunc("GET /{hash}", handler.GoTo())
-	r.HandleFunc("PATCH /link/{id}", handler.Update())
+	r.Handle("PATCH /link/{id}", middleware.IsAuthed(handler.Update()))
 	r.HandleFunc("DELETE /link/{id}", handler.Delete())
 }

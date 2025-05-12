@@ -6,6 +6,7 @@ import (
 	"github.com/jamal23041989/go_short_links/internal/auth"
 	"github.com/jamal23041989/go_short_links/internal/link"
 	"github.com/jamal23041989/go_short_links/pkg/db"
+	"github.com/jamal23041989/go_short_links/pkg/middleware"
 	"net/http"
 )
 
@@ -23,9 +24,14 @@ func main() {
 		LinkRepository: linkRepository,
 	})
 
+	stack := middleware.Chain(
+		middleware.CORS,
+		middleware.Logging,
+	)
+
 	server := http.Server{
 		Addr:    ":8081",
-		Handler: router,
+		Handler: stack(router),
 	}
 
 	fmt.Println("Server is listening on port 8081")
