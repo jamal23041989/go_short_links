@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/jamal23041989/go_short_links/internal/link"
+	"github.com/jamal23041989/go_short_links/internal/user"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -19,6 +20,6 @@ func main() {
 		panic(err)
 	}
 
-	db.AutoMigrate(&link.Link{})
+	db.AutoMigrate(&link.Link{}, &user.User{})
 
 }
