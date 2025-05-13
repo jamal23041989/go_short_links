@@ -2,6 +2,7 @@ package link
 
 import (
 	"github.com/jamal23041989/go_short_links/pkg/db"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -49,6 +50,34 @@ func (repo *LinkRepository) Delete(id uint) error {
 		return result.Error
 	}
 	return nil
+}
+
+func (repo *LinkRepository) GetAll(limit, offset int) ([]Link, error) {
+	var links []Link
+
+	query := repo.Database.
+		Table("links").
+		Where("deleted_at is null").
+		Session(&gorm.Session{})
+
+	query.
+		Order("id asc").
+		Limit(limit).
+		Offset(offset).
+		Scan(&links)
+
+	return links, nil
+}
+
+func (repo *LinkRepository) Count() int64 {
+	var count int64
+
+	repo.Database.
+		Table("links").
+		Where("deleted_at is null").
+		Count(&count)
+
+	return count
 }
 
 func NewLinkRepository(database *db.Db) *LinkRepository {

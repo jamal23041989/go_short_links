@@ -3,6 +3,7 @@ package link
 import (
 	"fmt"
 	"github.com/jamal23041989/go_short_links/configs"
+	"github.com/jamal23041989/go_short_links/pkg/event"
 	"github.com/jamal23041989/go_short_links/pkg/middleware"
 	"github.com/jamal23041989/go_short_links/pkg/req"
 	"github.com/jamal23041989/go_short_links/pkg/resp"
@@ -14,10 +15,25 @@ import (
 type LinkHandlerDeps struct {
 	LinkRepository *LinkRepository
 	Config         *configs.Config
+	EventBus       *event.EventBus
 }
 
 type LinkHandler struct {
 	LinkRepository *LinkRepository
+	EventBus       *event.EventBus
+}
+
+func NewLinkHandler(r *http.ServeMux, deps LinkHandlerDeps) {
+	handler := &LinkHandler{
+		LinkRepository: deps.LinkRepository,
+		EventBus:       deps.EventBus,
+	}
+
+	r.HandleFunc("POST /link", handler.Create())
+	r.HandleFunc("GET /{hash}", handler.GoTo())
+	r.Handle("GET /link", middleware.IsAuthed(handler.GetAll(), deps.Config))
+	r.Handle("PATCH /link/{id}", middleware.IsAuthed(handler.Update(), deps.Config))
+	r.HandleFunc("DELETE /link/{id}", handler.Delete())
 }
 
 func (h *LinkHandler) Create() http.HandlerFunc {
@@ -53,6 +69,12 @@ func (h *LinkHandler) GoTo() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
+
+		go h.EventBus.Publish(event.Event{
+			Type: event.EventLinkVisited,
+			Data: link.ID,
+		})
+
 		http.Redirect(w, r, link.Url, http.StatusTemporaryRedirect)
 	}
 }
@@ -114,13 +136,30 @@ func (h *LinkHandler) Delete() http.HandlerFunc {
 	}
 }
 
-func NewLinkHandler(r *http.ServeMux, deps LinkHandlerDeps) {
-	handler := &LinkHandler{
-		LinkRepository: deps.LinkRepository,
-	}
+func (h *LinkHandler) GetAll() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+		if err != nil {
+			http.Error(w, "invalid limit", http.StatusBadRequest)
+			return
+		}
 
-	r.HandleFunc("POST /link", handler.Create())
-	r.HandleFunc("GET /{hash}", handler.GoTo())
-	r.Handle("PATCH /link/{id}", middleware.IsAuthed(handler.Update(), deps.Config))
-	r.HandleFunc("DELETE /link/{id}", handler.Delete())
+		offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
+		if err != nil {
+			http.Error(w, "invalid offset", http.StatusBadRequest)
+			return
+		}
+
+		count := h.LinkRepository.Count()
+		links, err := h.LinkRepository.GetAll(limit, offset)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		resp.Json(w, LinksGetAllResponse{
+			Links: links,
+			Count: count,
+		}, http.StatusOK)
+	}
 }
