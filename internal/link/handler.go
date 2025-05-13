@@ -1,6 +1,8 @@
 package link
 
 import (
+	"fmt"
+	"github.com/jamal23041989/go_short_links/configs"
 	"github.com/jamal23041989/go_short_links/pkg/middleware"
 	"github.com/jamal23041989/go_short_links/pkg/req"
 	"github.com/jamal23041989/go_short_links/pkg/resp"
@@ -11,6 +13,7 @@ import (
 
 type LinkHandlerDeps struct {
 	LinkRepository *LinkRepository
+	Config         *configs.Config
 }
 
 type LinkHandler struct {
@@ -56,6 +59,11 @@ func (h *LinkHandler) GoTo() http.HandlerFunc {
 
 func (h *LinkHandler) Update() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		email, ok := r.Context().Value(middleware.ContextEmailKey).(string)
+		if ok {
+			fmt.Println(email)
+		}
+
 		body, err := req.HandleBody[LinkUpdateRequest](&w, r)
 		if err != nil {
 			return
@@ -113,6 +121,6 @@ func NewLinkHandler(r *http.ServeMux, deps LinkHandlerDeps) {
 
 	r.HandleFunc("POST /link", handler.Create())
 	r.HandleFunc("GET /{hash}", handler.GoTo())
-	r.Handle("PATCH /link/{id}", middleware.IsAuthed(handler.Update()))
+	r.Handle("PATCH /link/{id}", middleware.IsAuthed(handler.Update(), deps.Config))
 	r.HandleFunc("DELETE /link/{id}", handler.Delete())
 }

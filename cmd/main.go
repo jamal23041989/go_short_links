@@ -27,6 +27,7 @@ func main() {
 	})
 	link.NewLinkHandler(router, link.LinkHandlerDeps{
 		LinkRepository: linkRepository,
+		Config:         conf,
 	})
 
 	stack := middleware.Chain(
