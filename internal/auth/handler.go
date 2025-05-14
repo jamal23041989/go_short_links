@@ -18,6 +18,15 @@ type AuthHandler struct {
 	*AuthService
 }
 
+func NewAuthHandler(r *http.ServeMux, deps AuthHandlerDeps) {
+	handler := &AuthHandler{
+		Config:      deps.Config,
+		AuthService: deps.AuthService,
+	}
+	r.HandleFunc("POST /auth/login", handler.Login())
+	r.HandleFunc("POST /auth/register", handler.Register())
+}
+
 func (h *AuthHandler) Login() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := req.HandleBody[LoginRequest](&w, r)
@@ -72,13 +81,4 @@ func (h *AuthHandler) Register() http.HandlerFunc {
 
 		resp.Json(w, data, 200)
 	}
-}
-
-func NewAuthHandler(r *http.ServeMux, deps AuthHandlerDeps) {
-	handler := &AuthHandler{
-		Config:      deps.Config,
-		AuthService: deps.AuthService,
-	}
-	r.HandleFunc("POST /auth/login", handler.Login())
-	r.HandleFunc("POST /auth/register", handler.Register())
 }

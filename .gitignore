@@ -423,5 +423,7 @@ Temporary Items
 .idea
 .bin/
 .env
+/cmd/.env
+
 
 /postgres-data
